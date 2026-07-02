@@ -1,6 +1,6 @@
 {
   "name": "tool-discord",
-  "version": "2.5.10",
+  "version": "2.5.11",
   "description": "Discord Monitor Launcher Pro",
   "main": "main.js",
   "scripts": {
