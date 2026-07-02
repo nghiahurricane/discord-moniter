@@ -71,18 +71,25 @@ autoUpdater.on('update-downloaded', (info) => {
 app.whenReady().then(() => {
     createWindow();
     
-    // Check update sau 2s khi mở app
-    setTimeout(() => {
-        autoUpdater.setFeedURL({
-            provider: 'github',
-            owner: 'nghiahurricane',
-            repo: 'discord-moniter',
-            token: 'ghp_' + 'Ir8yCx2hoifUNEKR7ybcD0rYiUAKeO2h1ySu'
-        });
+    // Cấu hình URL với token
+    autoUpdater.setFeedURL({
+        provider: 'github',
+        owner: 'nghiahurricane',
+        repo: 'discord-moniter',
+        token: 'ghp_' + 'Ir8yCx2hoifUNEKR7ybcD0rYiUAKeO2h1ySu'
+    });
+
+    const checkUpdate = () => {
         autoUpdater.checkForUpdatesAndNotify().catch(e => {
             console.log("Update check error:", e);
         });
-    }, 2000);
+    };
+
+    // Check update sau 2s khi mở app
+    setTimeout(checkUpdate, 2000);
+
+    // Tự động check update lặp lại mỗi 30 phút (1800000 ms)
+    setInterval(checkUpdate, 30 * 60 * 1000);
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
