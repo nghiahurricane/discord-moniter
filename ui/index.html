@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Monitor Launcher</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-wrapper" style="display: flex; gap: 20px; height: 100%;">
+        
+        <!-- SIDEBAR -->
+        <div class="sidebar" style="width: 300px; display: flex; flex-direction: column; background: var(--panel-bg); padding: 15px; border-radius: 8px;">
+            <h3 style="margin-bottom: 15px;">Lấy Kênh Từ Server</h3>
+            
+            <div class="form-group" style="position: relative;">
+                <label>Kho Server:</label>
+                <input type="hidden" id="SAVED_SERVERS_MAP" value="{}">
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <select id="select-saved-server" style="flex: 1; padding: 10px; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; width: 0;">
+                        <option value="">-- Chọn Server --</option>
+                    </select>
+                    <button id="btn-fetch-channels" class="btn secondary" style="flex: none; width: auto;">Tải</button>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="input-new-server" placeholder="Thêm ID Server mới..." style="flex: 1; width: 0;">
+                    <button id="btn-add-server" class="btn secondary" title="Thêm vào Kho" style="flex: none; width: auto; padding: 10px 15px;">+</button>
+                </div>
+            </div>
+
+            <div class="sidebar-actions" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button id="btn-check-all" class="btn secondary" style="flex: 1; font-size: 12px; padding: 5px;">Chọn Hết</button>
+                <button id="btn-uncheck-all" class="btn secondary" style="flex: 1; font-size: 12px; padding: 5px;">Bỏ Chọn Hết</button>
+            </div>
+
+            <div id="channel-list-container" style="flex: 1; overflow-y: auto; background: var(--input-bg); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+                <div style="color: var(--text-muted); font-size: 13px; text-align: center; margin-top: 20px;">Danh sách kênh sẽ hiện ở đây...</div>
+            </div>
+
+            <div style="margin-top: auto;">
+                <button id="btn-apply-channels" class="btn success" style="width: 100%; padding: 12px; font-weight: bold;">Thêm Vào Cấu Hình</button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="container" style="flex: 1;">
+            <header>
+            <h1>Discord Link Monitor</h1>
+            <div id="status-badge" class="badge stopped">Trạng thái: Đang Tắt</div>
+        </header>
+
+        <main>
+            <div class="panel config-panel">
+                <h2>Cấu Hình Hệ Thống <span id="toggle-config" style="float: right; font-size: 14px; cursor: pointer; color: #5865F2;">[-] Ẩn bớt</span></h2>
+                
+                <div class="config-grid" id="config-content">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Discord Token (Bắt buộc):</label>
+                        <input type="password" id="DISCORD_TOKEN" placeholder="MTAxNzM...">
+                    </div>
+
+                    <div class="form-group" style="position: relative;">
+                        <label>ID Các Kênh Monitor:</label>
+                        <input type="hidden" id="CHANNEL_IDS" value="">
+                        <input type="hidden" id="CHANNEL_NAMES_MAP" value="{}">
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="input-new-channel" placeholder="Nhập ID kênh..." style="flex: 1;">
+                            <button id="btn-add-channel" class="btn secondary">Nhập</button>
+                        </div>
+                        
+                        <div id="channel-tags-container" class="tags-container">
+                            <!-- Các tag sẽ hiện ở đây -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>ID Các Server Monitor:</label>
+                        <input type="text" id="SERVER_IDS" placeholder="Ví dụ: 987654321">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Lọc Từ Khóa:</label>
+                        <input type="text" id="KEYWORDS_FILTER" placeholder="Ví dụ: shopee, lazada">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Lọc Người Gửi:</label>
+                        <input type="text" id="ALLOWED_USER_IDS" placeholder="Ví dụ: 123456, 7891011">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Chống Trùng (Giây):</label>
+                        <input type="number" id="COOLDOWN_SECONDS" value="300" placeholder="300">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Profile Chrome:</label>
+                        <input type="text" id="CHROME_PROFILE" placeholder="Ví dụ: Default, Profile 1">
+                    </div>
+
+                    <div class="form-group checkbox-group" style="grid-column: span 2; display: flex; flex-wrap: wrap; gap: 20px;">
+                        <label><input type="checkbox" id="REQUIRE_IN_STOCK"> Chỉ mở khi CÓ HÀNG (🟢)</label>
+                        <label><input type="checkbox" id="AUTO_START"> Chạy cùng Windows</label>
+                        <label><input type="checkbox" id="ENABLE_SOUND" checked> Bật âm báo (Ting!)</label>
+                        <label style="color: #f47fff; font-weight: bold;" title="Dùng khi không thể kết nối CDP do lỗi quyền. Mở ra một Chrome hoàn toàn mới."><input type="checkbox" id="USE_INDEPENDENT_CHROME"> Chrome Độc Lập (Fix Lỗi CDP)</label>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button id="btn-save" class="btn secondary">💾 Lưu Cấu Hình</button>
+                    <button id="btn-open-chrome" class="btn secondary" style="background-color: #f47fff; color: white;">🌍 MỞ CHROME SĂN HÀNG</button>
+                    <button id="btn-kill-chrome" class="btn danger" style="margin-left: 10px;" title="Dùng khi bị lỗi CDP">💀 ĐÓNG ÉP CHROME</button>
+                </div>
+                
+                <div class="actions">
+                    <button id="btn-start" class="btn primary">🚀 KHỞI ĐỘNG MONITOR</button>
+                    <button id="btn-stop" class="btn danger" style="display: none;">🛑 DỪNG MONITOR</button>
+                </div>
+            </div>
+
+            <div class="panel log-panel">
+                <h2>Cửa Sổ Theo Dõi (Logs)</h2>
+                <div id="log-output" class="terminal"></div>
+            </div>
+            </div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>
