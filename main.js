@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
@@ -30,7 +30,16 @@ autoUpdater.on('checking-for-update', () => {
     if (mainWindow) mainWindow.webContents.send('bot-log', '🔄 Đang kiểm tra phiên bản mới trên GitHub...\n');
 });
 autoUpdater.on('update-available', (info) => {
-    if (mainWindow) mainWindow.webContents.send('bot-log', `🎉 Phát hiện phiên bản mới (v${info.version}). Đang tiến hành tải xuống ngầm...\n`);
+    if (mainWindow) {
+        mainWindow.webContents.send('bot-log', `🎉 Phát hiện phiên bản mới (v${info.version}). Đang tiến hành tải xuống ngầm...\n`);
+        dialog.showMessageBox(mainWindow, {
+            type: 'info',
+            buttons: ['Đồng ý'],
+            title: 'Cập nhật phần mềm',
+            message: `Phát hiện phiên bản mới v${info.version}!`,
+            detail: `Hệ thống đang tự động tải bản cập nhật dưới nền. Vui lòng tiếp tục sử dụng, chúng tôi sẽ thông báo khi tải xong.`
+        });
+    }
 });
 autoUpdater.on('error', (err) => {
     if (mainWindow) {
@@ -42,10 +51,21 @@ autoUpdater.on('error', (err) => {
     }
 });
 autoUpdater.on('update-downloaded', (info) => {
-    if (mainWindow) mainWindow.webContents.send('bot-log', `✅ Tải xuống hoàn tất! Phần mềm sẽ tự động khởi động lại để cài đặt trong 3 giây...\n`);
-    setTimeout(() => {
-        autoUpdater.quitAndInstall(false, true); // (isSilent = false, isForceRunAfter = true)
-    }, 3000);
+    if (mainWindow) {
+        mainWindow.webContents.send('bot-log', `✅ Tải xuống hoàn tất! Chờ xác nhận cài đặt...\n`);
+        dialog.showMessageBox(mainWindow, {
+            type: 'question',
+            buttons: ['Cài đặt ngay', 'Để sau'],
+            defaultId: 0,
+            title: 'Cài đặt bản cập nhật',
+            message: `Phiên bản v${info.version} đã tải xong!`,
+            detail: `Bạn có muốn khởi động lại ứng dụng để áp dụng bản cập nhật ngay bây giờ không?`
+        }).then((returnValue) => {
+            if (returnValue.response === 0) {
+                autoUpdater.quitAndInstall(false, true);
+            }
+        });
+    }
 });
 
 app.whenReady().then(() => {
