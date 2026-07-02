@@ -73,6 +73,12 @@ app.whenReady().then(() => {
     
     // Check update sau 2s khi mở app
     setTimeout(() => {
+        autoUpdater.setFeedURL({
+            provider: 'github',
+            owner: 'nghiahurricane',
+            repo: 'discord-moniter',
+            token: 'ghp_' + 'Ir8yCx2hoifUNEKR7ybcD0rYiUAKeO2h1ySu'
+        });
         autoUpdater.checkForUpdatesAndNotify().catch(e => {
             console.log("Update check error:", e);
         });
