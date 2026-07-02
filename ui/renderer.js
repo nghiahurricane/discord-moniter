@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         COOLDOWN_SECONDS: document.getElementById('COOLDOWN_SECONDS'),
         CHROME_PROFILE: document.getElementById('CHROME_PROFILE'),
         CHANNEL_NAMES_MAP: document.getElementById('CHANNEL_NAMES_MAP'),
-        SAVED_SERVERS_MAP: document.getElementById('SAVED_SERVERS_MAP')
+        SAVED_SERVERS_MAP: document.getElementById('SAVED_SERVERS_MAP'),
+        WEBHOOK_URL: document.getElementById('WEBHOOK_URL')
     };
 
     const checkboxes = {

@@ -35,6 +35,7 @@ function startMonitor(config, logCallback, soundCallback) {
     const COOLDOWN_SECONDS = parseInt(config.COOLDOWN_SECONDS) || 0;
     const ENABLE_SOUND = config.ENABLE_SOUND === 'true';
     const REQUIRE_IN_STOCK = config.REQUIRE_IN_STOCK === 'true';
+    const WEBHOOK_URL = config.WEBHOOK_URL ? config.WEBHOOK_URL.trim() : '';
     
     if (!TOKEN) {
         logCallback('❌ Lỗi: Bạn chưa cấu hình DISCORD_TOKEN!\n');
@@ -74,6 +75,16 @@ function startMonitor(config, logCallback, soundCallback) {
         logCallback(`   -> Đang mở: ${url}\n`);
         if (ENABLE_SOUND && soundCallback) soundCallback();
         openLink(url, logCallback);
+        
+        if (WEBHOOK_URL) {
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: `🚀 **Hàng Mới Tới!**\n🔗 Link: ${url}`
+                })
+            }).catch(err => logCallback(`   ⚠️ Lỗi gửi Webhook: ${err.message}\n`));
+        }
     }
 
     client.on('ready', () => {

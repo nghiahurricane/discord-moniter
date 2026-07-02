@@ -126,6 +126,7 @@ CHROME_PROFILE=${newConfig.CHROME_PROFILE || ''}
 AUTO_START=${newConfig.AUTO_START === true || newConfig.AUTO_START === 'true'}
 ENABLE_SOUND=${newConfig.ENABLE_SOUND === true || newConfig.ENABLE_SOUND === 'true'}
 REQUIRE_IN_STOCK=${newConfig.REQUIRE_IN_STOCK === true || newConfig.REQUIRE_IN_STOCK === 'true'}
+WEBHOOK_URL=${newConfig.WEBHOOK_URL || ''}
 `;
     fs.writeFileSync(envPath, envContent);
 
