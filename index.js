@@ -1,7 +1,6 @@
 const { Client } = require('discord.js-selfbot-v13');
 const { exec } = require('child_process');
 const CDP = require('chrome-remote-interface');
-const open = require('open');
 
 let client = null;
 
@@ -15,7 +14,8 @@ async function openLink(url, logCallback) {
         logCallback(`   ⚡ [CDP] Đã bơm link thành công!\n`);
     } catch (err) {
         logCallback(`   ⚠️ Lỗi CDP (${err.message}). Đang mở mặc định. Bạn nhớ bấm "MỞ CHROME SĂN HÀNG" trên tool nhé!\n`);
-        open(url).catch(e => logCallback(`   ❌ Lỗi mở link: ${e.message}\n`));
+        const { shell } = require('electron');
+        shell.openExternal(url).catch(e => logCallback(`   ❌ Lỗi mở link: ${e.message}\n`));
     }
 }
 
