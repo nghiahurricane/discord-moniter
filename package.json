@@ -14,7 +14,8 @@
       {
         "provider": "github",
         "owner": "nghiahurricane",
-        "repo": "discord-moniter"
+        "repo": "discord-moniter",
+        "releaseType": "release"
       }
     ],
     "directories": {
