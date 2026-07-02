@@ -1,6 +1,7 @@
 const { Client } = require('discord.js-selfbot-v13');
 const { exec } = require('child_process');
 const CDP = require('chrome-remote-interface');
+const open = require('open');
 
 let client = null;
 
@@ -13,8 +14,8 @@ async function openLink(url, logCallback) {
         await clientCDP.close();
         logCallback(`   ⚡ [CDP] Đã bơm link thành công!\n`);
     } catch (err) {
-        logCallback(`   ⚠️ Lỗi CDP (${err.message}). Fallback mở bằng lệnh Windows thường.\n`);
-        exec(`start "" "${url}"`);
+        logCallback(`   ⚠️ Lỗi CDP (${err.message}). Đang mở mặc định. Bạn nhớ bấm "MỞ CHROME SĂN HÀNG" trên tool nhé!\n`);
+        open(url).catch(e => logCallback(`   ❌ Lỗi mở link: ${e.message}\n`));
     }
 }
 
@@ -44,7 +45,7 @@ function startMonitor(config, logCallback, soundCallback) {
         return;
     }
 
-    const openedLinksCache = new Map();
+    const openedLinksCache = new Set();
 
     function processAndOpenLink(url) {
         // Lọc rác: Bỏ qua link ảnh
@@ -58,19 +59,16 @@ function startMonitor(config, logCallback, soundCallback) {
             if (!KEYWORDS.some(k => lowerUrl.includes(k))) return;
         }
 
-        const now = Date.now();
         if (COOLDOWN_SECONDS > 0) {
             if (openedLinksCache.has(url)) {
-                if (((now - openedLinksCache.get(url)) / 1000) < COOLDOWN_SECONDS) {
-                    logCallback(`   [Bỏ qua] Spam link: ${url}\n`);
-                    return;
-                }
+                logCallback(`   [Bỏ qua] Spam link: ${url}\n`);
+                return;
             }
-            openedLinksCache.set(url, now);
-            // Dọn dẹp RAM
-            for (const [cachedUrl, timestamp] of openedLinksCache.entries()) {
-                if ((now - timestamp) / 1000 > COOLDOWN_SECONDS) openedLinksCache.delete(cachedUrl);
-            }
+            openedLinksCache.add(url);
+            // Dọn dẹp RAM tự động sau thời gian Cooldown
+            setTimeout(() => {
+                openedLinksCache.delete(url);
+            }, COOLDOWN_SECONDS * 1000);
         }
 
         logCallback(`   -> Đang mở: ${url}\n`);

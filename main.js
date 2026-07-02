@@ -70,13 +70,9 @@ app.on('window-all-closed', () => {
 
 function loadConfigObj() {
     if (!fs.existsSync(envPath)) return {};
+    const dotenv = require('dotenv');
     const content = fs.readFileSync(envPath, 'utf8');
-    const config = {};
-    content.split('\n').forEach(line => {
-        const match = line.match(/^([^#=]+)=(.*)$/);
-        if (match) config[match[1].trim()] = match[2].trim();
-    });
-    return config;
+    return dotenv.parse(content);
 }
 
 ipcMain.handle('get-config', () => {
