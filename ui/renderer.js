@@ -142,6 +142,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (config[key] !== undefined) checkboxes[key].checked = (config[key] === 'true');
     }
 
+    // Tự động load lại danh sách kênh đã fetch lần trước
+    const savedChannelsData = localStorage.getItem('last_fetched_channels');
+    if (savedChannelsData) {
+        try {
+            const { serverId, channels } = JSON.parse(savedChannelsData);
+            renderChannelsList(channels, serverId);
+            selectSavedServer.value = serverId;
+        } catch(e) { console.error(e) }
+    }
+
     function logToTerminal(text) {
         let colorClass = '';
         if (text.includes('Phát hiện link') || text.includes('Đã đăng nhập') || text.includes('Thành công') || text.includes('Tải xuống hoàn tất')) {
@@ -216,6 +226,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputNewServer.value = '';
     });
 
+    function renderChannelsList(channels, serverId) {
+        channelListContainer.innerHTML = '';
+        const currentIdsStr = inputs.CHANNEL_IDS.value;
+        const currentIds = currentIdsStr ? currentIdsStr.split(',').map(id => id.trim()).filter(id => id) : [];
+
+        channels.forEach(c => {
+            const label = document.createElement('label');
+            label.className = 'channel-item';
+            const isChecked = currentIds.includes(c.id) ? 'checked' : '';
+            label.innerHTML = `<input type="checkbox" class="channel-checkbox" value="${c.id}" data-name="${c.name}" ${isChecked}> #${c.name}`;
+            channelListContainer.appendChild(label);
+        });
+    }
+
     btnFetchChannels.addEventListener('click', async () => {
         const token = inputs.DISCORD_TOKEN.value;
         const serverId = selectSavedServer.value;
@@ -246,13 +270,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderSavedServers();
             selectSavedServer.value = serverId;
 
-            channelListContainer.innerHTML = '';
-            channels.forEach(c => {
-                const label = document.createElement('label');
-                label.className = 'channel-item';
-                label.innerHTML = `<input type="checkbox" class="channel-checkbox" value="${c.id}" data-name="${c.name}"> #${c.name}`;
-                channelListContainer.appendChild(label);
-            });
+            // Lưu vào localStorage để mồi lại sau khi tắt app
+            localStorage.setItem('last_fetched_channels', JSON.stringify({ serverId, channels }));
+
+            renderChannelsList(channels, serverId);
         } catch (err) {
             channelListContainer.innerHTML = `<div style="text-align:center; margin-top:20px; color:#ed4245;">Lỗi: ${err.message}</div>`;
         }
