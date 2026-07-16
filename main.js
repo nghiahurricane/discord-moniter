@@ -53,6 +53,8 @@ autoUpdater.on('error', (err) => {
 autoUpdater.on('update-downloaded', (info) => {
     if (mainWindow) {
         mainWindow.webContents.send('bot-log', `✅ Tải xuống hoàn tất! Chờ xác nhận cài đặt...\n`);
+        mainWindow.webContents.send('update-ready', info.version);
+        
         dialog.showMessageBox(mainWindow, {
             type: 'question',
             buttons: ['Cài đặt ngay', 'Để sau'],
@@ -68,15 +70,18 @@ autoUpdater.on('update-downloaded', (info) => {
     }
 });
 
+ipcMain.on('install-update', () => {
+    autoUpdater.quitAndInstall(false, true);
+});
+
 app.whenReady().then(() => {
     createWindow();
     
-    // Cấu hình URL với token
+    // Cấu hình cập nhật từ GitHub
     autoUpdater.setFeedURL({
         provider: 'github',
         owner: 'nghiahurricane',
-        repo: 'discord-moniter',
-        token: 'ghp_' + 'Ir8yCx2hoifUNEKR7ybcD0rYiUAKeO2h1ySu'
+        repo: 'discord-moniter'
     });
 
     const checkUpdate = () => {
@@ -127,6 +132,9 @@ AUTO_START=${newConfig.AUTO_START === true || newConfig.AUTO_START === 'true'}
 ENABLE_SOUND=${newConfig.ENABLE_SOUND === true || newConfig.ENABLE_SOUND === 'true'}
 REQUIRE_IN_STOCK=${newConfig.REQUIRE_IN_STOCK === true || newConfig.REQUIRE_IN_STOCK === 'true'}
 WEBHOOK_URL=${newConfig.WEBHOOK_URL || ''}
+ANTI_KEYWORDS=${newConfig.ANTI_KEYWORDS || ''}
+USE_INDEPENDENT_CHROME=${newConfig.USE_INDEPENDENT_CHROME === true || newConfig.USE_INDEPENDENT_CHROME === 'true'}
+SUPER_SPEED_MODE=${newConfig.SUPER_SPEED_MODE === true || newConfig.SUPER_SPEED_MODE === 'true'}
 `;
     fs.writeFileSync(envPath, envContent);
 
