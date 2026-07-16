@@ -248,3 +248,27 @@ main {
 .tag-item:hover .tag-remove {
     opacity: 1;
 }
+
+.log-link-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+.btn-inline-report {
+    display: none;
+    background: #ed4245;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.log-link-wrapper:hover .btn-inline-report {
+    display: inline-block;
+}
+.btn-inline-report:hover {
+    background: #da373c;
+}

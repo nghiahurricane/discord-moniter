@@ -145,7 +145,7 @@ function startMonitor(config, logCallback, soundCallback) {
     const openedLinksCache = new Set();
     const loggedMessages = new Set();
 
-    function processAndOpenLink(url) {
+    function processAndOpenLink(url, priceStr, embedImg, matchedKeywordStr) {
         // Lọc rác: Bỏ qua link ảnh
         if (url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i)) {
             // logCallback(`   [Lọc rác] Bỏ qua link ảnh: ${url}\n`);
@@ -178,7 +178,8 @@ function startMonitor(config, logCallback, soundCallback) {
         // MỞ LINK TRƯỚC KHI LÀM BẤT CỨ ĐIỀU GÌ KHÁC (Log, webhook, sound)
         openLink(url, config, logCallback);
         
-        logCallback(`   -> Đang mở: ${url}\n`);
+        let priceLog = priceStr ? ` (Giá: ${priceStr})` : '';
+        logCallback(`   -> Đang mở: ${url}${priceLog}\n`);
         if (ENABLE_SOUND && soundCallback) soundCallback();
         
         if (WEBHOOK_URL) {
@@ -186,10 +187,39 @@ function startMonitor(config, logCallback, soundCallback) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    content: `🚀 **Hàng Mới Tới!**\n🔗 Link: ${url}`
+                    content: `🚀 **Hàng Mới Tới!**\n🔗 Link: ${url}\n💰 Giá: ${priceStr || 'Chưa rõ'}`
                 })
             }).catch(err => logCallback(`   ⚠️ Lỗi gửi Webhook: ${err.message}\n`));
         }
+
+        // Pop-up Notification Góc phải màn hình Window
+        (async () => {
+            try {
+                const { Notification, nativeImage } = require('electron');
+                if (Notification.isSupported()) {
+                    let iconImage = null;
+                    if (embedImg) {
+                        try {
+                            const res = await fetch(embedImg);
+                            const buffer = await res.arrayBuffer();
+                            iconImage = nativeImage.createFromBuffer(Buffer.from(buffer));
+                        } catch (e) {}
+                    }
+                    
+                    const notifTitle = matchedKeywordStr ? `🛒 Có hàng: ${matchedKeywordStr.toUpperCase()}` : `🚀 Hàng Mới Tới!`;
+                    const notif = new Notification({
+                        title: notifTitle + (priceStr ? ` (Giá: ${priceStr})` : ''),
+                        body: `Bấm vào đây để mua ngay!\nLink: ${url}`,
+                        icon: iconImage,
+                        silent: false
+                    });
+                    notif.on('click', () => {
+                        require('child_process').spawn('cmd.exe', ['/c', 'start', '""', url], { detached: true, stdio: 'ignore' }).unref();
+                    });
+                    notif.show();
+                }
+            } catch(e) {}
+        })();
     }
 
     client.on('ready', () => {
@@ -238,6 +268,14 @@ function startMonitor(config, logCallback, soundCallback) {
         
         const checkText = (message.content || '') + embedText;
 
+        // Trích xuất Giá (Price) từ CheckText (Dựa theo Yên Nhật ¥, 円, Yen)
+        let extractedPrice = null;
+        const priceMatch = checkText.match(/(?:¥|￥)\s*([0-9,]+)|([0-9,]+)\s*(?:円|Yen)/i);
+        if (priceMatch) {
+            let p = priceMatch[1] || priceMatch[2];
+            if (p) extractedPrice = '¥' + p;
+        }
+
         let matchedKeywordStr = null;
         if (KEYWORDS.length > 0) {
             const lowerText = checkText.toLowerCase();
@@ -257,7 +295,7 @@ function startMonitor(config, logCallback, soundCallback) {
         }
 
         if (matchedKeywordStr && !loggedMessages.has(message.id)) {
-            logCallback(`   🎯 [Khớp Từ Khóa] Bắt trúng chữ: "${matchedKeywordStr}"\n`);
+            logCallback(`   🎯 [Khớp Từ Khóa] Bắt trúng chữ: "${matchedKeywordStr}"${extractedPrice ? ` (Bắt được giá: ${extractedPrice})` : ''}\n`);
             loggedMessages.add(message.id);
             setTimeout(() => loggedMessages.delete(message.id), 60000); // Xóa cache sau 1 phút
         }
@@ -268,8 +306,11 @@ function startMonitor(config, logCallback, soundCallback) {
             for (const link of links) extractedLinks.add(link);
         }
         
+        let embedImg = null;
         if (message.embeds && message.embeds.length > 0) {
             for (const embed of message.embeds) {
+                if (!embedImg && embed.thumbnail && embed.thumbnail.url) embedImg = embed.thumbnail.url;
+                if (!embedImg && embed.image && embed.image.url) embedImg = embed.image.url;
                 if (embed.url) extractedLinks.add(embed.url);
             }
         }
@@ -277,7 +318,7 @@ function startMonitor(config, logCallback, soundCallback) {
         if (extractedLinks.size > 0) {
             logCallback(`\n[${new Date().toLocaleTimeString()}] 🚀 Phát hiện link từ ${message.author.username}:\n`);
             for (const link of extractedLinks) {
-                processAndOpenLink(link);
+                processAndOpenLink(link, extractedPrice, embedImg, matchedKeywordStr);
             }
         }
     };

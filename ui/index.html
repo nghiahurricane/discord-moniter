@@ -49,6 +49,7 @@
             <header>
             <h1>Discord Link Monitor</h1>
             <div id="status-badge" class="badge stopped">Trạng thái: Đang Tắt</div>
+            <button id="btn-update" class="btn success" style="display: none; margin-left: auto;">🎉 CẬP NHẬT PHIÊN BẢN MỚI</button>
         </header>
 
         <main>
@@ -66,7 +67,7 @@
                         <input type="password" id="WEBHOOK_URL" placeholder="https://discord.com/api/webhooks/...">
                     </div>
 
-                    <div class="form-group" style="position: relative; grid-row: span 6; display: flex; flex-direction: column;">
+                    <div class="form-group" style="position: relative; grid-row: span 3; display: flex; flex-direction: column;">
                         <label>ID Các Kênh Monitor:</label>
                         <input type="hidden" id="CHANNEL_IDS" value="">
                         <input type="hidden" id="CHANNEL_NAMES_MAP" value="{}">
@@ -76,7 +77,7 @@
                             <button id="btn-add-channel" class="btn secondary">Nhập</button>
                         </div>
                         
-                        <div id="channel-tags-container" class="tags-container" style="flex: 1; max-height: 350px;">
+                        <div id="channel-tags-container" class="tags-container" style="flex: 1; max-height: 200px;">
                             <!-- Các tag sẽ hiện ở đây -->
                         </div>
                     </div>
@@ -86,14 +87,37 @@
                         <input type="text" id="SERVER_IDS" placeholder="Ví dụ: 987654321">
                     </div>
 
-                    <div class="form-group">
-                        <label>Lọc Từ Khóa:</label>
-                        <input type="text" id="KEYWORDS_FILTER" placeholder="Ví dụ: shopee, lazada">
+                    <div class="form-group" style="grid-row: span 3; display: flex; flex-direction: column;">
+                        <label>Lọc Từ Khóa (Bắt buộc chứa):</label>
+                        <input type="hidden" id="KEYWORDS_FILTER" value="">
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="input-new-keyword" placeholder="Nhập từ khóa..." style="flex: 1;">
+                            <button id="btn-add-keyword" class="btn secondary">Thêm</button>
+                        </div>
+                        
+                        <div id="keywords-tags-container" class="tags-container" style="flex: 1; max-height: 200px;">
+                            <!-- Các tag sẽ hiện ở đây -->
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label>Lọc Người Gửi:</label>
                         <input type="text" id="ALLOWED_USER_IDS" placeholder="Ví dụ: 123456, 7891011">
+                    </div>
+
+                    <div class="form-group" style="grid-row: span 3; display: flex; flex-direction: column;">
+                        <label>Từ Khóa Loại Trừ (Bỏ qua link chứa từ này):</label>
+                        <input type="hidden" id="ANTI_KEYWORDS" value="">
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="input-new-antikeyword" placeholder="Nhập từ khóa hoặc link rác..." style="flex: 1;">
+                            <button id="btn-add-antikeyword" class="btn secondary">Thêm</button>
+                        </div>
+                        
+                        <div id="anti-keywords-tags-container" class="tags-container" style="flex: 1; max-height: 200px;">
+                            <!-- Các tag sẽ hiện ở đây -->
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -111,6 +135,7 @@
                         <label><input type="checkbox" id="AUTO_START"> Chạy cùng Windows</label>
                         <label><input type="checkbox" id="ENABLE_SOUND" checked> Bật âm báo (Ting!)</label>
                         <label style="color: #f47fff; font-weight: bold;" title="Dùng khi không thể kết nối CDP do lỗi quyền. Mở ra một Chrome hoàn toàn mới."><input type="checkbox" id="USE_INDEPENDENT_CHROME"> Chrome Độc Lập (Fix Lỗi CDP)</label>
+                        <label style="color: #ff4757; font-weight: bold;" title="Chặn tải toàn bộ ảnh, CSS, video để giảm băng thông và render trang ngay lập tức. Tính năng này giúp Add To Cart chớp nhoáng nhưng giao diện sẽ toàn chữ."><input type="checkbox" id="SUPER_SPEED_MODE"> ⚡ VIP SIÊU TỐC ĐỘ</label>
                     </div>
                 </div>
 

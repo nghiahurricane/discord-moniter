@@ -75,6 +75,7 @@ ipcMain.on('install-update', () => {
 });
 
 app.whenReady().then(() => {
+    app.setAppUserModelId("com.discord.monitor");
     createWindow();
     
     // Cấu hình cập nhật từ GitHub

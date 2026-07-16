@@ -9,14 +9,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         CHROME_PROFILE: document.getElementById('CHROME_PROFILE'),
         CHANNEL_NAMES_MAP: document.getElementById('CHANNEL_NAMES_MAP'),
         SAVED_SERVERS_MAP: document.getElementById('SAVED_SERVERS_MAP'),
-        WEBHOOK_URL: document.getElementById('WEBHOOK_URL')
+        WEBHOOK_URL: document.getElementById('WEBHOOK_URL'),
+        ANTI_KEYWORDS: document.getElementById('ANTI_KEYWORDS')
     };
 
     const checkboxes = {
         AUTO_START: document.getElementById('AUTO_START'),
         ENABLE_SOUND: document.getElementById('ENABLE_SOUND'),
         REQUIRE_IN_STOCK: document.getElementById('REQUIRE_IN_STOCK'),
-        USE_INDEPENDENT_CHROME: document.getElementById('USE_INDEPENDENT_CHROME')
+        USE_INDEPENDENT_CHROME: document.getElementById('USE_INDEPENDENT_CHROME'),
+        SUPER_SPEED_MODE: document.getElementById('SUPER_SPEED_MODE')
     };
 
     const btnSave = document.getElementById('btn-save');
@@ -111,6 +113,117 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // UI Logic for Anti-Keyword Tags
+    const inputNewAntiKeyword = document.getElementById('input-new-antikeyword');
+    const btnAddAntiKeyword = document.getElementById('btn-add-antikeyword');
+    const antiKeywordsTagsContainer = document.getElementById('anti-keywords-tags-container');
+
+    function renderAntiKeywordTags() {
+        if (!antiKeywordsTagsContainer) return;
+        const currentStr = inputs.ANTI_KEYWORDS.value;
+        const currentIds = currentStr ? currentStr.split(',').map(id => id.trim()).filter(id => id) : [];
+        
+        antiKeywordsTagsContainer.innerHTML = '';
+        currentIds.forEach((id, index) => {
+            const div = document.createElement('div');
+            div.className = 'tag-item';
+            div.innerHTML = `
+                <span style="word-break: break-all;">${id}</span>
+                <span class="tag-remove-ak" data-index="${index}" title="Xóa">✕</span>
+            `;
+            antiKeywordsTagsContainer.appendChild(div);
+        });
+
+        document.querySelectorAll('.tag-remove-ak').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                currentIds.splice(idx, 1);
+                inputs.ANTI_KEYWORDS.value = currentIds.join(', ');
+                renderAntiKeywordTags();
+            });
+        });
+    }
+
+    if (btnAddAntiKeyword) {
+        btnAddAntiKeyword.addEventListener('click', () => {
+            const newId = inputNewAntiKeyword.value.trim();
+            if (!newId) return;
+
+            const currentStr = inputs.ANTI_KEYWORDS.value;
+            const currentIds = currentStr ? currentStr.split(',').map(id => id.trim()).filter(id => id) : [];
+            
+            if (!currentIds.includes(newId)) {
+                currentIds.push(newId);
+                inputs.ANTI_KEYWORDS.value = currentIds.join(', ');
+                renderAntiKeywordTags();
+            }
+            inputNewAntiKeyword.value = '';
+        });
+
+        inputNewAntiKeyword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btnAddAntiKeyword.click();
+            }
+        });
+    }
+
+    // UI Logic for Keyword Tags
+    const inputNewKeyword = document.getElementById('input-new-keyword');
+    const btnAddKeyword = document.getElementById('btn-add-keyword');
+    const keywordsTagsContainer = document.getElementById('keywords-tags-container');
+
+    function renderKeywordTags() {
+        if (!keywordsTagsContainer) return;
+        const currentStr = inputs.KEYWORDS_FILTER.value;
+        const currentIds = currentStr ? currentStr.split(',').map(id => id.trim()).filter(id => id) : [];
+        
+        keywordsTagsContainer.innerHTML = '';
+        currentIds.forEach((id, index) => {
+            const div = document.createElement('div');
+            div.className = 'tag-item';
+            div.innerHTML = `
+                <span style="word-break: break-all;">${id}</span>
+                <span class="tag-remove-kw" data-index="${index}" title="Xóa">✕</span>
+            `;
+            keywordsTagsContainer.appendChild(div);
+        });
+
+        document.querySelectorAll('.tag-remove-kw').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                currentIds.splice(idx, 1);
+                inputs.KEYWORDS_FILTER.value = currentIds.join(', ');
+                renderKeywordTags();
+            });
+        });
+    }
+
+    if (btnAddKeyword) {
+        btnAddKeyword.addEventListener('click', () => {
+            const newId = inputNewKeyword.value.trim();
+            if (!newId) return;
+
+            const currentStr = inputs.KEYWORDS_FILTER.value;
+            const currentIds = currentStr ? currentStr.split(',').map(id => id.trim()).filter(id => id) : [];
+            
+            if (!currentIds.includes(newId)) {
+                currentIds.push(newId);
+                inputs.KEYWORDS_FILTER.value = currentIds.join(', ');
+                renderKeywordTags();
+            }
+            inputNewKeyword.value = '';
+        });
+
+        inputNewKeyword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btnAddKeyword.click();
+            }
+        });
+    }
+
+
     // Load config initially
     const config = await window.api.getConfig();
     for (const key in inputs) {
@@ -136,8 +249,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (serversMap[currentValue]) selectSavedServer.value = currentValue;
     }
 
-    // Khởi tạo render UI cho Channel IDs
+    // Khởi tạo render UI cho tags
     renderChannelTags();
+    renderAntiKeywordTags();
+    renderKeywordTags();
     renderSavedServers();
     for (const key in checkboxes) {
         if (config[key] !== undefined) checkboxes[key].checked = (config[key] === 'true');
@@ -164,6 +279,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         let formatted = text.replace(/\n/g, '<br>');
+        
+        const match = formatted.match(/-> Đang mở:\s*(https?:\/\/[^\s<]+)/);
+        if (match) {
+            const url = match[1];
+            formatted = formatted.replace(
+                url, 
+                `<span class="log-link-wrapper">${url} <button class="btn-inline-report" data-url="${url}" title="Chặn link này">🚫 Báo rác</button></span>`
+            );
+        }
+
         if (colorClass) {
             terminal.innerHTML += `<span class="${colorClass}">${formatted}</span>`;
         } else {
@@ -171,6 +296,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         terminal.scrollTop = terminal.scrollHeight;
     }
+
+    terminal.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('btn-inline-report')) {
+            const url = e.target.getAttribute('data-url');
+            if (confirm(`Bạn có chắc chắn muốn chặn vĩnh viễn link này không?\n\nLink: ${url}`)) {
+                let currentStr = inputs.ANTI_KEYWORDS.value;
+                let currentIds = currentStr ? currentStr.split(',').map(id => id.trim()).filter(id => id) : [];
+                if (!currentIds.includes(url)) {
+                    currentIds.push(url);
+                    inputs.ANTI_KEYWORDS.value = currentIds.join(', ');
+                    if (typeof renderAntiKeywordTags === 'function') renderAntiKeywordTags();
+                    await saveCurrentConfig(true);
+                }
+            }
+        }
+    });
 
     async function saveCurrentConfig(showOutput = false) {
         const newConfig = {};
@@ -362,6 +503,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             statusBadge.className = 'badge stopped';
             btnStart.style.display = 'block';
             btnStop.style.display = 'none';
+        }
+    });
+
+    window.api.onUpdateReady((event, version) => {
+        const btnUpdate = document.getElementById('btn-update');
+        if (btnUpdate) {
+            btnUpdate.style.display = 'block';
+            btnUpdate.textContent = `🎉 CẬP NHẬT LÊN v${version}`;
+            btnUpdate.onclick = () => {
+                if (confirm(`Bạn có chắc chắn muốn khởi động lại phần mềm để cập nhật lên phiên bản v${version} không?`)) {
+                    window.api.installUpdate();
+                }
+            };
         }
     });
 });

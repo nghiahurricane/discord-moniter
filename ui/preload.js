@@ -10,5 +10,7 @@ contextBridge.exposeInMainWorld('api', {
     fetchChannels: (data) => ipcRenderer.invoke('fetch-channels', data),
     onBotLog: (callback) => ipcRenderer.on('bot-log', callback),
     onPlaySound: (callback) => ipcRenderer.on('play-sound', callback),
-    onBotStatus: (callback) => ipcRenderer.on('bot-status', callback)
+    onBotStatus: (callback) => ipcRenderer.on('bot-status', callback),
+    onUpdateReady: (callback) => ipcRenderer.on('update-ready', callback),
+    installUpdate: () => ipcRenderer.send('install-update')
 });
